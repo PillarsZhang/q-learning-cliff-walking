@@ -1,0 +1,85 @@
+{
+    // 使用 IntelliSense 了解相关属性。 
+    // 悬停以查看现有属性的描述。
+    // 欲了解更多信息，请访问: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: [train] advanced_dqn",
+            "type": "python",
+            "request": "launch",
+            "program": "advanced_dqn.py",
+            "args": [
+                "--device", "cuda:0",
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: [train] advanced_dqn (rand)",
+            "type": "python",
+            "request": "launch",
+            "program": "advanced_dqn.py",
+            "args": [
+                "--device", "cuda:0",
+                "--rand"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: [train] standard_qtable",
+            "type": "python",
+            "request": "launch",
+            "program": "standard_qtable.py",
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: [demo] standard_qtable",
+            "type": "python",
+            "request": "launch",
+            "program": "demo_standard_qtable.py",
+            "args": [
+                "--id", "latest",
+                "--run"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: [demo] advanced_dqn",
+            "type": "python",
+            "request": "launch",
+            "program": "demo_advanced_dqn.py",
+            "args": [
+                "--device", "cuda:0",
+                "--id", "latest",
+                "--run"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: [bench] advanced_dqn",
+            "type": "python",
+            "request": "launch",
+            "program": "bench_advanced_dqn.py",
+            "args": [
+                "--device", "cuda:0",
+                "--id", "latest",
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
+            "name": "Python: [test] env_check",
+            "type": "python",
+            "request": "launch",
+            "program": "test_env_check.py",
+            "args": [],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        }
+    ]
+}
