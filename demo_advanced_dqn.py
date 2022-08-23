@@ -1,14 +1,14 @@
 import argparse
 import json
 from pathlib import Path
+import random
 import numpy as np
 import matplotlib.pyplot as plt
-import torch
-import re
+from bench_advanced_dqn import bench, get_weight_list
 
-from common import Env, Agent, PositionList
-from utils import get_result_fig, get_visual_q_fig, get_reward_and_epsilon_fig, reset_random_seed, sorted_pairs
-from advanced_dqn import QNetModel, StatusCounter
+from utils import reset_random_seed
+from fig import get_result_fig, get_result_for_bench_fig, get_reward_for_bench_fig, get_visual_q_fig, get_reward_and_epsilon_fig, save_figs
+from advanced_dqn import StatusCounter
 
 if __name__ == "__main__":
 
@@ -17,17 +17,12 @@ if __name__ == "__main__":
     parser.add_argument("--id", type=str, default="latest")
     parser.add_argument("--run", action="store_true")
     parser.add_argument("--rand", action="store_true")
+    parser.add_argument("--show", action="store_true")
     args = parser.parse_args()
 
     # For reproducibility
     reset_random_seed((147, 157, 167))
     is_rand_num_ciff = args.rand
-
-    map_size = [4, 12]
-    max_steps = np.prod(map_size)
-    env = Env.get_advanced(map_size=map_size, is_rand_num_ciff=is_rand_num_ciff)
-    model = QNetModel(map_size=map_size, device=torch.device(args.device))
-    agent = Agent(env, model)
 
     if args.id == "latest":
         _p = Path(f"saved/advanced_dqn{'_rand_num_ciff' if is_rand_num_ciff else ''}")
@@ -43,69 +38,112 @@ if __name__ == "__main__":
     saved_path = Path(f"saved/demo_advanced_dqn{'_rand_num_ciff' if is_rand_num_ciff else ''}")
     saved_path.mkdir(exist_ok=True, parents=True)
 
-    # Get the weight corresponding to episode
-    weight_fn_list = list(_q_saved_path.glob(f"episode=*,*.pt"))
-    _regexp = re.compile(r"episode=([0-9]+),.*")
-    weight_episode_list = list(map(lambda fn: int(_regexp.search(fn.name).group(1)), weight_fn_list))
-    weight_episode_list, weight_fn_list = sorted_pairs(weight_episode_list, weight_fn_list)
-    print(f"Demo | num_weights: {len(weight_episode_list)}")
-
     # Exponential moving average
     avg_alpha = 0.5e-3
     np_episode = np.array([x.episode for x in status_counter_list])
     np_reward = np.array([x.reward for x in status_counter_list])
     np_epsilon = np.array([x.epsilon for x in status_counter_list])
 
-    # # Figure: reward_and_epsilon_while_train
-    # fig = get_reward_and_epsilon_fig(np_episode, np_reward, np_epsilon, avg_alpha, alpha=0.02)
-    # fig.savefig(saved_path / "reward_and_epsilon_while_train.pdf", bbox_inches='tight')
-    # fig.savefig(saved_path / "reward_and_epsilon_while_train.png", bbox_inches='tight', dpi=300)
-    # plt.close(fig)
+    # Figure: reward_and_epsilon_while_train
+    fig = get_reward_and_epsilon_fig(np_episode, np_reward, np_epsilon, avg_alpha, alpha=0.02)
+    save_figs(fig, saved_path / "reward_and_epsilon_while_train.pdf")
 
     possible_result_list = ["drop", "limit", "goal"]
     np_result = np.array([possible_result_list.index(x.result) for x in status_counter_list])
 
-    # # Figure: result_while_train
-    # fig = get_result_fig(np_episode, np_result, possible_result_list, avg_alpha)
-    # fig.savefig(saved_path / "result_while_train.pdf", bbox_inches='tight')
-    # fig.savefig(saved_path / "result_while_train.png", bbox_inches='tight', dpi=300)
-    # plt.close(fig)
+    # Figure: result_while_train
+    fig = get_result_fig(np_episode, np_result, possible_result_list, avg_alpha)
+    save_figs(fig, saved_path / "result_while_train.pdf")
+
+    status_path = Path(f"saved/bench_advanced_dqn{'_rand_num_ciff' if is_rand_num_ciff else ''}/{args.id}") / "result_list_for_bench.json"
+    with open(status_path, 'r') as f:
+        result_list_for_bench = json.load(f)
+
+    _lst = []
+    possible_result_list = ["drop", "limit", "goal"]
+    for xb in result_list_for_bench:
+        weight_episode = xb["weight_episode"]
+        status_counter_dic_list = xb["status_counter_dic_list"]
+        status_counter_list = list(map(lambda dic: StatusCounter(**dic), status_counter_dic_list))
+
+        np_result = np.array([possible_result_list.index(x.result) for x in status_counter_list])
+        np_result_onehot = np.eye(len(possible_result_list))[np_result]
+        result_prob = np_result_onehot.mean(axis=0)
+
+        actual_reward = np.array([x.reward for x in status_counter_list], dtype=float)
+        for x in status_counter_list:
+            if x.check_cache is None:
+                if '_fake_ideal_reward_tip' not in locals():
+                    _fake_ideal_reward_tip = "Prompt only when it appears for the first time"
+                    print(f"Attention: _fake_ideal_reward_tip: {_fake_ideal_reward_tip}")
+                    _fake_ideal_reward_rs = np.random.RandomState(123)
+                x.check_cache = _fake_ideal_reward_rs.randint(0, 16)
+        ideal_reward = np.array([-(x.check_cache-1) for x in status_counter_list], dtype=float)
+
+        divide_zero = lambda a, b: np.divide(a, b, out=np.ones_like(a), where=b!=0)
+
+        _lst.append((weight_episode, result_prob, actual_reward, ideal_reward))
+
+    np_weight_episode, np_result_prob, np_actual_reward, np_ideal_reward = [np.array(x) for x in zip(*_lst)]
+
+    # Figure: win_prob_in_bench
+    fig = get_result_for_bench_fig(
+        np_weight_episode, np_result_prob, possible_result_list, 
+        avg_alpha=1e-1)
+    save_figs(fig, saved_path / "win_prob_in_bench.pdf")
+
+    # Figure: reward_in_bench
+    fig = get_reward_for_bench_fig(np_weight_episode, np_actual_reward, np_ideal_reward)
+    save_figs(fig, saved_path / "reward_in_bench.pdf")
+    if args.show: plt.show()
+
+    # Find weight episode of max goal prob.
+    max_goal_prob_idx = np_result_prob[:, possible_result_list.index("goal")].argmax()
+    max_goal_prob = np_result_prob[max_goal_prob_idx, possible_result_list.index("goal")]
+    max_goal_prob_episode = np_weight_episode[max_goal_prob_idx]
+
+    max_goal_prob_saved_path = saved_path / f"max_goal_prob.txt"
+    max_goal_prob_str = (f"max_goal_prob_idx, max_goal_prob, max_goal_prob_episode\n"
+        f"{max_goal_prob_idx}, {max_goal_prob}, {max_goal_prob_episode}\n")
+    print(max_goal_prob_str)
+    with open(max_goal_prob_saved_path, 'w') as f:
+        f.write(max_goal_prob_str)
 
     if args.run:
-        # Run once environment
-        status_counter = StatusCounter()
-        track_list: PositionList = []
-        epsilon = 0
 
+        # Choose weight filename of max goal prob.
+        weight_episode_list, weight_fn_list = get_weight_list(_q_saved_path)
+        max_goal_prob_weight_fn = weight_fn_list[weight_episode_list.index(max_goal_prob_episode)]
+        
+        num_run = 20
+        get_seed = lambda x: tuple(random.getrandbits(16) for _ in range(x))
+        for idx_run in range(num_run):
+            # Run once environment
+            seed = get_seed(3)
+            np_q, env, track_list, status_counter_dic = bench(
+                weight_fn=max_goal_prob_weight_fn,
+                is_rand_num_ciff=is_rand_num_ciff,
+                device=args.device,
+                seed=seed,
+                num_episodes=1,
+                is_track=True
+            )
 
+            fig, _ = get_visual_q_fig(env, np_q, track_list)
+            fig_saved_path = saved_path / f"visual_q_and_run_{idx_run}.pdf"
+            save_figs(fig, fig_saved_path)
 
+            osd_str = (
+                    f"[result, torch/numpy/random-seed, actual/ideal-reward]\n"
+                    f"[{status_counter_dic['result']}, {seed[0]}/{seed[1]}/{seed[2]}, "
+                    f"{status_counter_dic['reward']}/{-(status_counter_dic['check_cache']-1)}]\n"
+                )
+            osd_saved_path = saved_path / f"visual_q_and_run_{idx_run}.txt"
+            with open(osd_saved_path, 'w') as f:
+                f.write(osd_str)
+            
+            print(f"idx_run: {idx_run}, seed: {seed}, fig_saved_path: {fig_saved_path}")
+            print(f"osd_str: \n{osd_str}")
+            print(f"status_counter_dic: {status_counter_dic}")
 
-        agent.reset()
-        epsilon = 0
-        status_counter.epsilon = epsilon
-        s = agent.pos
-        r_sum = 0
-        for step in range(max_steps):
-            track_list.append(s)
-            status_counter.step += 1
-            a = agent.model.decide(s, epsilon)
-            s_new, r, status = agent.step(a)
-            r_sum += r
-            match status:
-                case "drop" | "goal": break
-                case _: s = s_new
-
-        track_list.append(s_new)
-        if status == "continue":
-            status = "limit"
-        status_counter.result = status
-        status_counter.reward = r_sum
-
-        agent.draw_stdout()
-        print(status_counter)
-
-        np_q = np.array(agent.model.q)
-        # Figure: q_table_after_train
-        fig, _ = get_visual_q_fig(np_q, agent.env, track_list)
-        fig.savefig(saved_path / "visual_q_and_run.pdf", bbox_inches='tight')
-        plt.close(fig)
+            if args.show: plt.show()

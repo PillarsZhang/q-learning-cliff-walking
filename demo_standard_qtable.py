@@ -5,7 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from common import Env, Agent, PositionList
-from utils import get_visual_q_fig, get_reward_and_epsilon_fig, reset_random_seed
+from fig import get_visual_q_fig, get_reward_and_epsilon_fig, save_figs
+from utils import reset_random_seed
 from standard_qtable import QTableModel, StatusCounter
 
 if __name__ == "__main__":
@@ -13,6 +14,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--id", type=str, default="latest")
     parser.add_argument("--run", action="store_true")
+    parser.add_argument("--show", action="store_true")
     args = parser.parse_args()
 
     # For reproducibility
@@ -48,8 +50,7 @@ if __name__ == "__main__":
 
     # Figure: reward_and_epsilon_while_train
     fig = get_reward_and_epsilon_fig(np_episode, np_reward, np_epsilon, avg_alpha)
-    fig.savefig(saved_path / "reward_and_epsilon_while_train.pdf", bbox_inches='tight')
-    plt.close(fig)
+    save_figs(fig, saved_path / "reward_and_epsilon_while_train.pdf")
 
     if args.run:
         # Run once environment
@@ -81,6 +82,8 @@ if __name__ == "__main__":
 
         np_q = np.array(agent.model.q)
         # Figure: q_table_after_train
-        fig, _ = get_visual_q_fig(np_q, agent.env, track_list)
-        fig.savefig(saved_path / "visual_q_and_run.pdf", bbox_inches='tight')
-        plt.close(fig)
+        fig, _ = get_visual_q_fig(agent.env, np_q, track_list)
+        save_figs(fig, saved_path / "visual_q_and_run.pdf")
+
+    if args.show:
+        plt.show()

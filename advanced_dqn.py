@@ -47,7 +47,7 @@ class QNetModel():
 
     def update(self) -> float:
         if len(self.memory) < self.batch_size:
-            return
+            return None
         transitions = self.memory.sample(self.batch_size)
         batch = Transition(*zip(*transitions))
 
@@ -114,6 +114,8 @@ class StatusCounter():
     avg_goal_per: float = None
     result: str = "unknow"
 
+    check_cache: float = None
+
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
@@ -149,6 +151,7 @@ if __name__ == "__main__":
         agent = Agent(env, model, r_goal=0)
         agent.reset()
 
+        status_counter.check_cache = agent.env.check_cache
         epsilon = get_epsilon(status_counter.episode, eps_range, eps_deacy)
         pos = agent.pos
         status_counter.reward = 0

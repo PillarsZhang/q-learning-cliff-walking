@@ -7,9 +7,8 @@ import torch
 from tqdm import tqdm
 from pathlib import Path
 from advanced_dqn import QNetModel, StatusCounter
-from utils import get_epsilon, get_visual_q_fig, reset_random_seed, sorted_pairs
-from common import Position, Env, Agent, ReplayMemory, Transition
-import matplotlib.pyplot as plt
+from utils import reset_random_seed, sorted_pairs
+from common import Position, Env, Agent
 
 def bench(
     weight_fn: Path,
@@ -35,6 +34,7 @@ def bench(
         agent = Agent(env, model, r_goal=0)
         agent.reset()
 
+        status_counter.check_cache = agent.env.check_cache
         pos = agent.pos
         status_counter.reward = 0
         track_list = [pos]
@@ -72,7 +72,7 @@ def bench(
 
     if is_track:
         np_q = agent.model.get_q(agent.env.vec)
-        return np_q, agent.env, track_list
+        return np_q, agent.env, track_list, status_counter_dic
     else:
         return status_counter_dic_list
 
@@ -134,19 +134,3 @@ if __name__ == "__main__":
         status_path = saved_path / "result_list_for_bench.json"
         with open(status_path, 'w') as f:
             json.dump(result_list_for_bench, f, indent=4)
-
-    # np_q, env, track_list = bench(
-    #     weight_fn="saved/advanced_dqn/1661021781.048/episode=00198000,avg_reward=-19.936.pt",
-    #     is_rand_num_ciff=is_rand_num_ciff,
-    #     seed = (1147, 1157, 1167),
-    #     num_episodes = 1,
-    #     is_track = True
-    # )
-
-    # fig, _ = get_visual_q_fig(np_q, env, track_list)
-    # fig.savefig(r"D:\Folders\TempTest\example_dqn.png", bbox_inches='tight', dpi=300)
-    # plt.show()
-
-    # status_path = saved_path / "status_counter_dic_list.json"
-    # with open(status_path, 'w') as f:
-    #     json.dump(status_counter_dic_list, f, indent=4)

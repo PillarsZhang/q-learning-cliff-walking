@@ -61,6 +61,8 @@ class Env():
         self.neg_pos = np.array([-1,-1])
         self.vec = self.vectorize()
 
+        self.check_cache = None
+
     def inspect(self, pos_new: Position) -> tuple[bool, bool, bool]:
         is_out = ~((pos_new > self.neg_pos).all() & (pos_new < np.array(self.map_size)).all())
         is_drop = (pos_new == self.cliff_list).all(axis=1).any()
@@ -85,10 +87,12 @@ class Env():
     def check(self):
         # Check the connectivity between the start point and the end point
         # https://leetcode.com/problems/shortest-path-in-binary-matrix/
-        return shortestPathBinaryMatrix(self.vec[:,:,2], self.start_pos, self.end_pos)
+        if self.check_cache is None:
+            self.check_cache = shortestPathBinaryMatrix(self.vec[:,:,2], self.start_pos, self.end_pos)
+        return self.check_cache
 
 class Agent():
-    def __init__(self, env: Env, model: QModel, r_goal:float=0, r_drop:float=-100):
+    def __init__(self, env:Env, model:QModel=None, r_goal:float=0, r_drop:float=-100):
         self.env = env
         self.model = model
 
