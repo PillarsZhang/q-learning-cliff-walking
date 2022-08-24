@@ -67,7 +67,7 @@ python demo_advanced_dqn.py --device $device --run
 
 ### Advanced Cliff Walking [12x12] [trap:32-64] (Solution based on DQN)
 
-Using 12x12 map, and the number of cliffs is random between 32-64.
+Using 12x12 map, but will randomly generate 32-64 cliffs. I used the BFS algorithm to ensure that there must be a feasible path.
 
 ```
 device="cuda:0"
@@ -79,7 +79,7 @@ python bench_advanced_dqn.py --device $device --rand --large
 python demo_advanced_dqn.py --device $device --run --rand --large
 ```
 
-### Other schematic and performance data (negligible)
+### Other schematic and performance data (Optional)
 
 ```
 python test_env_check.py
