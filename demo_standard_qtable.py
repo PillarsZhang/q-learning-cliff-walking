@@ -26,8 +26,8 @@ if __name__ == "__main__":
 
     max_steps = np.prod(env.map_size)
 
+    _p = Path(f"saved/standard_qtable/")
     if args.id == "latest":
-        _p = Path(f"saved/standard_qtable/")
         _id_list = [x.name for x in _p.iterdir() if x.is_dir()]
         assert len(_id_list) > 0, Exception("Checkpoint not found.")
         args.id = max(_id_list, key=float)

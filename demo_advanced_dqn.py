@@ -26,8 +26,8 @@ if __name__ == "__main__":
     is_rand, is_large = args.rand, args.large
     saved_suffix = get_saved_suffix(is_rand, is_large)
 
+    _p = Path(f"saved/advanced_dqn{saved_suffix}")
     if args.id == "latest":
-        _p = Path(f"saved/advanced_dqn{saved_suffix}")
         _id_list = [x.name for x in _p.iterdir() if x.is_dir()]
         assert len(_id_list) > 0, Exception("Checkpoint not found.")
         args.id = max(_id_list, key=float)
