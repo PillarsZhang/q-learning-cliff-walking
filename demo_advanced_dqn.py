@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from bench_advanced_dqn import bench, get_weight_list
 
-from utils import reset_random_seed
+from utils import get_saved_suffix, reset_random_seed
 from fig import get_result_fig, get_result_for_bench_fig, get_reward_for_bench_fig, get_visual_q_fig, get_reward_and_epsilon_fig, save_figs
 from advanced_dqn import StatusCounter
 
@@ -17,15 +17,17 @@ if __name__ == "__main__":
     parser.add_argument("--id", type=str, default="latest")
     parser.add_argument("--run", action="store_true")
     parser.add_argument("--rand", action="store_true")
+    parser.add_argument("--large", action="store_true")
     parser.add_argument("--show", action="store_true")
     args = parser.parse_args()
 
     # For reproducibility
     reset_random_seed((147, 157, 167))
-    is_rand_num_ciff = args.rand
+    is_rand, is_large = args.rand, args.large
+    saved_suffix = get_saved_suffix(is_rand, is_large)
 
     if args.id == "latest":
-        _p = Path(f"saved/advanced_dqn{'_rand_num_ciff' if is_rand_num_ciff else ''}")
+        _p = Path(f"saved/advanced_dqn{saved_suffix}")
         _id_list = [x.name for x in _p.iterdir() if x.is_dir()]
         assert len(_id_list) > 0, Exception("Checkpoint not found.")
         args.id = max(_id_list, key=float)
@@ -35,7 +37,7 @@ if __name__ == "__main__":
         _json = json.load(f)
         status_counter_list = list(map(lambda dic: StatusCounter(**dic), _json))
 
-    saved_path = Path(f"saved/demo_advanced_dqn{'_rand_num_ciff' if is_rand_num_ciff else ''}")
+    saved_path = Path(f"saved/demo_advanced_dqn{saved_suffix}")
     saved_path.mkdir(exist_ok=True, parents=True)
 
     # Exponential moving average
@@ -55,7 +57,7 @@ if __name__ == "__main__":
     fig = get_result_fig(np_episode, np_result, possible_result_list, avg_alpha)
     save_figs(fig, saved_path / "result_while_train.pdf")
 
-    status_path = Path(f"saved/bench_advanced_dqn{'_rand_num_ciff' if is_rand_num_ciff else ''}/{args.id}") / "result_list_for_bench.json"
+    status_path = Path(f"saved/bench_advanced_dqn{saved_suffix}/{args.id}") / "result_list_for_bench.json"
     with open(status_path, 'r') as f:
         result_list_for_bench = json.load(f)
 
@@ -78,7 +80,7 @@ if __name__ == "__main__":
                     print(f"Attention: _fake_ideal_reward_tip: {_fake_ideal_reward_tip}")
                     _fake_ideal_reward_rs = np.random.RandomState(123)
                 x.check_cache = _fake_ideal_reward_rs.randint(0, 16)
-        ideal_reward = np.array([-(x.check_cache-1) for x in status_counter_list], dtype=float)
+        ideal_reward = np.array([-(x.check_cache) for x in status_counter_list], dtype=float)
 
         divide_zero = lambda a, b: np.divide(a, b, out=np.ones_like(a), where=b!=0)
 
@@ -122,7 +124,7 @@ if __name__ == "__main__":
             seed = get_seed(3)
             np_q, env, track_list, status_counter_dic = bench(
                 weight_fn=max_goal_prob_weight_fn,
-                is_rand_num_ciff=is_rand_num_ciff,
+                is_rand=is_rand, is_large=is_large, 
                 device=args.device,
                 seed=seed,
                 num_episodes=1,
@@ -136,7 +138,7 @@ if __name__ == "__main__":
             osd_str = (
                     f"[result, torch/numpy/random-seed, actual/ideal-reward]\n"
                     f"[{status_counter_dic['result']}, {seed[0]}/{seed[1]}/{seed[2]}, "
-                    f"{status_counter_dic['reward']}/{-(status_counter_dic['check_cache']-1)}]\n"
+                    f"{status_counter_dic['reward']}/{-(status_counter_dic['check_cache'])}]\n"
                 )
             osd_saved_path = saved_path / f"visual_q_and_run_{idx_run}.txt"
             with open(osd_saved_path, 'w') as f:

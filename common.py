@@ -36,10 +36,16 @@ class Env():
         )
 
     @classmethod
-    def get_advanced(cls, map_size=[4, 12], is_rand_num_ciff=False, is_no_block=True) -> "Env":
+    def get_advanced(cls, is_rand=False, is_large=False, map_size=None, num_ciff=None, min_ciff=None, is_no_block=True) -> "Env":
+        if map_size is None:
+            map_size = [12, 12] if is_large else [4, 12]
+        if num_ciff is None:
+            num_ciff = 64 if is_large else 10
+        if min_ciff is None:
+            min_ciff = 32 if is_large else 0
         while True:
-            num_ciff = np.random.randint(0, 11) if is_rand_num_ciff else 10
-            signal_idx_list = np.random.permutation(np.prod(map_size))[:2+num_ciff]
+            true_num_ciff = np.random.randint(min_ciff, num_ciff+1) if is_rand else num_ciff
+            signal_idx_list = np.random.permutation(np.prod(map_size))[:2+true_num_ciff]
             start_pos = np.unravel_index(signal_idx_list[0], map_size)
             end_pos = np.unravel_index(signal_idx_list[1], map_size)
             cliff_list = np.array(np.unravel_index(signal_idx_list[2:], map_size)).T
@@ -92,7 +98,7 @@ class Env():
         return self.check_cache
 
 class Agent():
-    def __init__(self, env:Env, model:QModel=None, r_goal:float=0, r_drop:float=-100):
+    def __init__(self, env:Env, model:QModel=None, r_goal:float=-1, r_drop:float=-100):
         self.env = env
         self.model = model
 
@@ -136,7 +142,7 @@ class Agent():
             add_signal[cliff[0]][cliff[1]] = 'x'
         add_signal[self.env.start_pos[0]][self.env.start_pos[1]] = 's'
         add_signal[self.env.end_pos[0]][self.env.end_pos[1]] = 'e'
-        output_str = '\n'.join((' '.join(y)) for y in add_signal)
+        output_str = '\n'.join(('  '.join(y)) for y in add_signal)
         print(f"start: {self.env.start_pos} ({to_arrow[self.env.start_pos[0]][self.env.start_pos[1]]}), end: {self.env.end_pos}, num_cliff: {len(self.env.cliff_list)}")
         print(output_str)
 

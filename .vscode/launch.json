@@ -16,13 +16,13 @@
             "justMyCode": true
         },
         {
-            "name": "Python: [train] advanced_dqn (rand)",
+            "name": "Python: [train] advanced_dqn (rand_large)",
             "type": "python",
             "request": "launch",
             "program": "advanced_dqn.py",
             "args": [
                 "--device", "cuda:0",
-                "--rand"
+                "--rand", "--large"
             ],
             "console": "integratedTerminal",
             "justMyCode": true

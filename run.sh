@@ -27,29 +27,30 @@ echo "Start (device=$device, train=$train, bench=$bench, demo=$demo, test=$test)
 
 echo "========"
 
-echo "Delete"
+echo "Prepare"
+[ "$device" != "cpu" ] && ( set -x; nvidia-smi --query-gpu=timestamp,name,pci.bus_id,driver_version,pstate,pcie.link.gen.max,pcie.link.gen.current,temperature.gpu,utilization.gpu,utilization.memory,memory.total,memory.free,memory.used --format=csv )
 $demo  && ( set -x; rm -rf "saved/demo_*" )
 $test  && ( set -x; rm -rf "saved/test_*" )
 
 echo "========"
 
-echo "Standard Cliff Walking (Solution based on Q table)"
+echo "Standard Cliff Walking [4x12] (Solution based on Q-Table)"
 $train && ( set -x; python standard_qtable.py )
 $demo  && ( set -x; python demo_standard_qtable.py --run )
 
 echo "========"
 
-echo "Advanced Cliff Walking (Solution based on DQN)"
+echo "Advanced Cliff Walking [4x12] (Solution based on DQN)"
 $train && ( set -x; python advanced_dqn.py --device $device )
 $bench && ( set -x; python bench_advanced_dqn.py --device $device )
 $demo  && ( set -x; python demo_advanced_dqn.py --device $device --run )
 
 echo "========"
 
-echo "Advanced Cliff Walking with an indefinite number of cliffs (Solution based on DQN)"
-$train && ( set -x; python advanced_dqn.py --device $device --rand )
-$bench && ( set -x; python bench_advanced_dqn.py --device $device --rand )
-$demo  && ( set -x; python demo_advanced_dqn.py --device $device --run --rand )
+echo "Advanced Cliff Walking [12x12] [trap:32-64] (Solution based on DQN)"
+$train && ( set -x; python advanced_dqn.py --device $device --rand --large )
+$bench && ( set -x; python bench_advanced_dqn.py --device $device --rand --large )
+$demo  && ( set -x; python demo_advanced_dqn.py --device $device --run --rand --large )
 
 echo "========"
 

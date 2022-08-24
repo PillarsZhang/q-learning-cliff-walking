@@ -44,3 +44,9 @@ def shortestPathBinaryMatrix(grid:np.ndarray, a:Position, b:Position) -> int:
                 grid[x, y] = 1
                 q.append((x, y, d+1))
     return -1
+
+def get_saved_suffix(is_rand:bool, is_large:bool):
+    suffix = ""
+    if is_rand: suffix += "_rand"
+    if is_large: suffix += "_large"
+    return suffix

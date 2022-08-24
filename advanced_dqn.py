@@ -6,7 +6,7 @@ import time
 import numpy as np
 from tqdm import tqdm
 from common import Position, Env, Agent, ReplayMemory, Transition
-from utils import get_epsilon, reset_random_seed
+from utils import get_epsilon, get_saved_suffix, reset_random_seed
 from net import MLP, CNN
 import torch
 from torch import nn, optim
@@ -120,23 +120,25 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--rand", action="store_true")
+    parser.add_argument("--large", action="store_true")
     parser.add_argument("--device", type=str, default="cpu")
     args = parser.parse_args()
 
     reset_random_seed()
-    is_rand_num_ciff = args.rand
+    is_rand, is_large = args.rand, args.large
+    saved_suffix = get_saved_suffix(is_rand, is_large)
 
-    map_size = [4, 12]
+    map_size = Env.get_advanced(is_rand=is_rand, is_large=is_large).map_size
     max_steps = np.prod(map_size)
 
-    num_episodes = int(2e5)
-    eps_range = (0.9, 0.001)
+    num_episodes = int(2e5)+1
+    eps_range = (0.9, 0.05)
     eps_deacy = 5e4 # The smaller, the faster drop
 
     avg_alpha = 1e-3
     sync_interval = 16
 
-    saved_path = Path(f"saved/advanced_dqn{'_rand_num_ciff' if is_rand_num_ciff else ''}/{time.time():.3f}")
+    saved_path = Path(f"saved/advanced_dqn{saved_suffix}/{time.time():.3f}")
     saved_path.mkdir(exist_ok=True, parents=True)
     save_episodes = int(1e3)
 
@@ -147,8 +149,8 @@ if __name__ == "__main__":
     status_counter_dic_list = []
 
     for status_counter.episode in pbar_episode:
-        env = Env.get_advanced(map_size=map_size, is_rand_num_ciff=is_rand_num_ciff)
-        agent = Agent(env, model, r_goal=0)
+        env = Env.get_advanced(is_rand=is_rand, is_large=is_large)
+        agent = Agent(env, model)
         agent.reset()
 
         status_counter.check_cache = agent.env.check_cache

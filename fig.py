@@ -35,14 +35,26 @@ def get_reward_and_epsilon_fig(np_episode, np_reward, np_epsilon, avg_alpha, alp
 
 def get_visual_q_fig(env:Env, np_q:np.ndarray=None, track_list:PositionList=None):
 
+    # Dynamic figsize
+
+    # match tuple(env.map_size[::-1]):
+    #     case (12, 4): np_figsize = np.array([5, 2.5])
+    #     case (12, 12): np_figsize = np.array([5, 5.7])
+    #     case _: np_figsize = env.map_size[::-1] / 12 * 5
+
+    # The following calculations are derived from the above linear regression
+    np_figsize = env.map_size[::-1] * np.array([5/12, 0.4]) + np.array([0, 0.9])
+
+    # The extra white space will be cropped when saving, 
+    # so it is good to meet the size with colorbar
+    fig, ax = plt.subplots(figsize=tuple(np_figsize), constrained_layout=True)
+
     # Shunt with Q value
     if np_q is not None:
-        fig, ax = plt.subplots(figsize=(5, 2.5), constrained_layout=True)
         np_value = np_q.max(axis=2)
         cmap = plt.cm.get_cmap()
         im = ax.imshow(np_value, cmap=cmap)
     else:
-        fig, ax = plt.subplots(figsize=(5, 2.0), constrained_layout=True)
         np_value = np.ones(env.map_size) * 0.1
         cmap = plt.cm.get_cmap("Blues")
         im = ax.imshow(np_value, cmap=cmap, vmin=0, vmax=1)

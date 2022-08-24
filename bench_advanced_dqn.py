@@ -7,19 +7,19 @@ import torch
 from tqdm import tqdm
 from pathlib import Path
 from advanced_dqn import QNetModel, StatusCounter
-from utils import reset_random_seed, sorted_pairs
+from utils import get_saved_suffix, reset_random_seed, sorted_pairs
 from common import Position, Env, Agent
 
 def bench(
     weight_fn: Path,
-    is_rand_num_ciff: bool,
+    is_rand: bool, is_large: bool,
     device: torch.device,
     seed: tuple[float, float, float] = (147, 157, 167),
     num_episodes: int = 1000,
-    is_track: bool = False,
-    map_size: Position = [4, 12]
+    is_track: bool = False
 ):
     reset_random_seed(seed)
+    map_size = Env.get_advanced(is_rand=is_rand, is_large=is_large).map_size
     max_steps = np.prod(map_size)
 
     model = QNetModel(map_size=map_size, device=device)
@@ -30,8 +30,8 @@ def bench(
 
     epsilon = 0
     for status_counter.episode in range(num_episodes):
-        env = Env.get_advanced(map_size=map_size, is_rand_num_ciff=is_rand_num_ciff)
-        agent = Agent(env, model, r_goal=0)
+        env = Env.get_advanced(is_rand=is_rand, is_large=is_large)
+        agent = Agent(env, model)
         agent.reset()
 
         status_counter.check_cache = agent.env.check_cache
@@ -89,12 +89,15 @@ if __name__ == "__main__":
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--id", type=str, default="latest")
     parser.add_argument("--rand", action="store_true")
+    parser.add_argument("--large", action="store_true")
     args = parser.parse_args()
 
+    is_rand, is_large = args.rand, args.large
+    saved_suffix = get_saved_suffix(is_rand, is_large)
+
     random_seed_for_bench = (247, 257, 267)
-    is_rand_num_ciff = args.rand
     if args.id == "latest":
-        _p = Path(f"saved/advanced_dqn{'_rand_num_ciff' if is_rand_num_ciff else ''}")
+        _p = Path(f"saved/advanced_dqn{saved_suffix}")
         _id_list = [x.name for x in _p.iterdir() if x.is_dir()]
         assert len(_id_list) > 0, Exception("Checkpoint not found.")
         args.id = max(_id_list, key=float)
@@ -105,7 +108,7 @@ if __name__ == "__main__":
     print(f"Bench | num_weights: {len(weight_episode_list)}")
 
     # Prepare the save directory of bench results
-    saved_path = Path(f"saved/bench_advanced_dqn{'_rand_num_ciff' if is_rand_num_ciff else ''}/{args.id}")
+    saved_path = Path(f"saved/bench_advanced_dqn{saved_suffix}/{args.id}")
     saved_path.mkdir(exist_ok=True, parents=True)
 
     # Bench all weights
@@ -117,7 +120,7 @@ if __name__ == "__main__":
     for idx, (weight_episode, weight_fn) in bench_pbar:
         status_counter_dic_list = bench(
             weight_fn=weight_fn,
-            is_rand_num_ciff=is_rand_num_ciff,
+            is_rand=is_rand, is_large=is_large, 
             device=torch.device(args.device),
             seed = random_seed_for_bench,
             num_episodes = 1000,

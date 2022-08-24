@@ -13,15 +13,20 @@ if __name__ == "__main__":
 
     # Figure: Empty envirment
     env = Env.get_standard()
-    np_q = np.zeros(env.map_size)
     fig, _ = get_visual_q_fig(env)
     save_figs(fig, saved_path / "demo_standard_env.pdf")
 
     reset_random_seed()
     env = Env.get_advanced()
-    np_q = np.zeros(env.map_size)
+    # fig, _ = get_visual_q_fig(env, np_q=np.random.rand(*env.map_size, 4)*-10)
     fig, _ = get_visual_q_fig(env)
     save_figs(fig, saved_path / "demo_advanced_env.pdf")
+
+    reset_random_seed()
+    env = Env.get_advanced(is_rand=True, is_large=True)
+    # fig, _ = get_visual_q_fig(env, np_q=np.random.rand(*env.map_size, 4)*-10)
+    fig, _ = get_visual_q_fig(env)
+    save_figs(fig, saved_path / "demo_advanced_env_rand_large.pdf")
 
     # Figure: Epsilon
     eps_range = (0.9, 0.05)

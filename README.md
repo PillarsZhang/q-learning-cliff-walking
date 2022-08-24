@@ -1,17 +1,17 @@
 # Q Learning Cliff Walking (Q table and DQN)
 
-This project adds random traps to the classic cliff walking environment, so DQN is also a solution. It's not very difficult to realize **Q table** and **DQN**. I have carried out complete result analysis and tedious visualization in this project. Due to time constraints, the code is not very concise and reasonable, but I am very satisfied with the output results.
+This project adds random traps to the classic cliff walking environment, so DQN is also a solution. It's not very difficult to realize **Q-Table** and **DQN**. I have carried out complete result analysis and tedious visualization in this project. Due to time constraints, the code is not very concise and reasonable, but I am very satisfied with the output results.
 
 ![Examples of visualization results](docs/images/cover.png)
 
 ## Result
 
-- **Standard Cliff Walking (Solution based on Q table)**
+- **Standard Cliff Walking [4x12] (Solution based on Q-Table)**
   - It is impossible not to find the best path after *2,500* episodes of training.
-- **Advanced Cliff Walking (Solution based on DQN)**
-  - *95.2%* success rate in 1000 tests, after *145,000* episodes of training.
-- **Advanced Cliff Walking with an indefinite number of cliffs (Solution based on DQN)**
-  - *97.0%* success rate in 1000 tests, after *96,000* episodes of training.
+- **Advanced Cliff Walking [4x12] (Solution based on DQN)**
+  - ~~Old: *95.2%* success rate in 1000 tests, after *145,000* episodes of training.~~
+- **Advanced Cliff Walking [12x12] [trap:32-64] (Solution based on DQN)**
+  - ~~Old for another environment: *97.0%* success rate in 1000 tests, after *96,000* episodes of training.~~
 
 ## Environment
 
@@ -40,9 +40,9 @@ mkdir -p saved
 
 However, the training and demonstration of the following 3 environments are independent, and you can run them at the same time.
 
-### Standard Cliff Walking (Solution based on Q table)
+### Standard Cliff Walking [4x12] (Solution based on Q-Table)
 
-The effect should be the same as that of `CliffWalking-v0` of gym (Maybe there are differences in details).
+The effect should be the same as that of `CliffWalking-v0` of gym (Maybe there are differences in details. For example, I think it is reasonable not to return to the starting point after falling off the cliff).
 
 ```
 # train
@@ -51,30 +51,39 @@ python standard_qtable.py
 python demo_standard_qtable.py --run
 ```
 
-### Advanced Cliff Walking (Solution based on DQN)
+### Advanced Cliff Walking [4x12] (Solution based on DQN)
 
 It uses the same 4x12 map as `CliffWalking-v0`, but will randomly generate 10 cliffs (perhaps better named traps) and start-end points that can ensure connectivity.
 
 ```
+device="cuda:0"
 # train
-python advanced_dqn.py --device cuda:0
+python advanced_dqn.py --device $device
 # bench
-python bench_advanced_dqn.py --device cuda:0
+python bench_advanced_dqn.py --device $device
 # demo
-python demo_advanced_dqn.py --device cuda:0 --run
+python demo_advanced_dqn.py --device $device --run
 ```
 
-### Advanced Cliff Walking with an indefinite number of cliffs (Solution based on DQN)
+### Advanced Cliff Walking [12x12] [trap:32-64] (Solution based on DQN)
 
-Same as above, but the number of cliffs is random between 0-10.
+Using 12x12 map, and the number of cliffs is random between 32-64.
 
 ```
+device="cuda:0"
 # train
-python advanced_dqn.py --device cuda:0 --rand
+python advanced_dqn.py --device $device --rand --large
 # bench
-python bench_advanced_dqn.py --device cuda:0 --rand
+python bench_advanced_dqn.py --device $device --rand --large
 # demo
-python demo_advanced_dqn.py --device cuda:0 --run --rand
+python demo_advanced_dqn.py --device $device --run --rand --large
+```
+
+### Other schematic and performance data (negligible)
+
+```
+python test_env_check.py
+python demo_other.py
 ```
 
 ## Reference
