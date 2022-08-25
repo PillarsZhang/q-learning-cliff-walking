@@ -61,6 +61,20 @@
             "justMyCode": true
         },
         {
+            "name": "Python: [demo] advanced_dqn (rand_large)",
+            "type": "python",
+            "request": "launch",
+            "program": "demo_advanced_dqn.py",
+            "args": [
+                "--device", "cuda:0",
+                "--run",
+                "--show",
+                "--rand", "--large"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
+        {
             "name": "Python: [bench] advanced_dqn",
             "type": "python",
             "request": "launch",
