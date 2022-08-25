@@ -10,8 +10,10 @@ This project adds random traps to the classic cliff walking environment, so DQN 
   - It is impossible not to find the best path after *2,500* episodes of training.
 - **Advanced Cliff Walking [4x12] (Solution based on DQN)**
   - *95.7%* success rate in 1000 tests, after *170,000* episodes of training.
+  - Train: 1:02:10 (2e5 episodes), bench: 0:54:54 (200 checkpoints)
 - **Advanced Cliff Walking [12x12] [trap:32-64] (Solution based on DQN)**
   - *82.2%* success rate in 1000 tests, after *365,000* episodes of training.
+  - Train: 4:39:12 (6e5 episodes), bench: 2:06:51 (120 checkpoints)
 
 ## Environment
 
