@@ -95,7 +95,8 @@ if __name__ == "__main__":
     save_figs(fig, saved_path / "win_prob_in_bench.pdf")
 
     # Figure: reward_in_bench
-    fig = get_reward_for_bench_fig(np_weight_episode, np_actual_reward, np_ideal_reward)
+    fig = get_reward_for_bench_fig(np_weight_episode, np_actual_reward, np_ideal_reward, 
+        lim=100 if not is_large else 200)
     save_figs(fig, saved_path / "reward_in_bench.pdf")
     if args.show: plt.show()
 
