@@ -131,16 +131,16 @@ if __name__ == "__main__":
     map_size = Env.get_advanced(is_rand=is_rand, is_large=is_large).map_size
     max_steps = np.prod(map_size)
 
-    num_episodes = int(2e5)+1
+    num_episodes = int(2e5)+1 if not is_large else int(6e5)+1
     eps_range = (0.9, 0.05)
-    eps_deacy = 5e4 # The smaller, the faster drop
+    eps_deacy = 5e4 if not is_large else 8e4 # The smaller, the faster drop
 
     avg_alpha = 1e-3
     sync_interval = 16
 
     saved_path = Path(f"saved/advanced_dqn{saved_suffix}/{time.time():.3f}")
     saved_path.mkdir(exist_ok=True, parents=True)
-    save_episodes = int(1e3)
+    save_episodes = int(1e3) if not is_large else int(5e3)
 
     model = QNetModel(map_size=map_size, device=torch.device(args.device))
 
