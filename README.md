@@ -9,9 +9,9 @@ This project adds random traps to the classic cliff walking environment, so DQN 
 - **Standard Cliff Walking [4x12] (Solution based on Q-Table)**
   - It is impossible not to find the best path after *2,500* episodes of training.
 - **Advanced Cliff Walking [4x12] (Solution based on DQN)**
-  - ~~Old: *95.2%* success rate in 1000 tests, after *145,000* episodes of training.~~
+  - *95.7%* success rate in 1000 tests, after *170,000* episodes of training.
 - **Advanced Cliff Walking [12x12] [trap:32-64] (Solution based on DQN)**
-  - ~~Old for another environment: *97.0%* success rate in 1000 tests, after *96,000* episodes of training.~~
+  - *82.2%* success rate in 1000 tests, after *365,000* episodes of training.
 
 ## Environment
 
@@ -34,7 +34,6 @@ You can run each process separately.
 # Run train and bench (It takes a lot of time)
 ./run.sh --device cuda:0 --train --bench
 # Run demo and test (And log to file)
-mkdir -p saved
 ./run.sh --device cuda:0 --demo --test | tee saved/run.log
 ```
 
@@ -84,6 +83,7 @@ python demo_advanced_dqn.py --device $device --run --rand --large
 ```
 python test_env_check.py
 python demo_other.py
+python test_onnx_export.py
 ```
 
 ## Reference
