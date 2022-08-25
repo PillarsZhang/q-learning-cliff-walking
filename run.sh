@@ -57,7 +57,7 @@ echo "========"
 echo "Other"
 $test  && ( set -x; python test_env_check.py )
 $demo  && ( set -x; python demo_other.py )
-
+$test  && ( set -x; python test_onnx_export.py )
 echo "========"
 
 run_end=`date +%s`
