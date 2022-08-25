@@ -15,16 +15,18 @@ from typing import TYPE_CHECKING
 if TYPE_CHECKING:
     from common import Env, PositionList
 
-def get_reward_and_epsilon_fig(np_episode, np_reward, np_epsilon, avg_alpha, alpha=0.2):
+def get_reward_and_epsilon_fig(np_episode, np_reward, np_epsilon, avg_alpha, alpha=0.4):
     np_reward_ema = get_ema(np_reward, avg_alpha)
 
     # fig, ax = plt.subplots(figsize=(4, 2), constrained_layout=True)
     # l1, = ax.plot(np_episode, np_reward, color="b", linewidth=0.4, alpha=0.5, label="Reward (raw)")
     fig, ax = plt.subplots(figsize=(6, 2), constrained_layout=True)
-    l1 = ax.scatter(np_episode, np_reward, color="b", alpha=alpha, s=1, label="Reward (raw)", rasterized=True)
+    l1 = ax.scatter(np_episode, np_reward, color="cornflowerblue", alpha=alpha, s=1, label="Reward (raw)", rasterized=True)
     l2, = ax.plot(np_episode, np_reward_ema, color="r", linewidth=1.5, label=f"Reward ($\\alpha_{{EMA}}={avg_alpha}$)", rasterized=True)
     ax.set_xlabel("Episode")
     ax.set_ylabel("Reward")
+
+    set_axis_scientific(ax.xaxis)
 
     axl = ax.twinx()
     l3, = axl.plot(np_episode, np_epsilon, linestyle="--", color="y", label="$\\epsilon$", rasterized=True)
@@ -244,13 +246,16 @@ def get_result_for_bench_fig(np_episode:np.ndarray, np_result_prob:np.ndarray, p
     _idx_sca = np_result_prob[:, _idx].argmax()
     ax.scatter(np_episode[_idx_sca], np_result_prob[:, _idx][_idx_sca], c='y')
 
+    set_axis_scientific(ax.xaxis)
+
+    return fig
+
+def set_axis_scientific(axis):
     # https://atmamani.github.io/cheatsheets/matplotlib/matplotlib_2/#Numbers-on-axes-in-scientific-notation
     formatter = ticker.ScalarFormatter(useMathText=True)
     formatter.set_scientific(True) 
     formatter.set_powerlimits((-1,1)) 
-    ax.xaxis.set_major_formatter(formatter)
-
-    return fig
+    axis.set_major_formatter(formatter)
 
 def get_mean_confidence_interval(a: np.ndarray) -> tuple[float, float, float]:
     m = np.mean(a)
@@ -258,7 +263,7 @@ def get_mean_confidence_interval(a: np.ndarray) -> tuple[float, float, float]:
     return m, *c
 
 def get_reward_for_bench_fig(np_weight_episode, 
-    np_actual_reward, np_ideal_reward):
+    np_actual_reward, np_ideal_reward, lim=100):
     
     fig, ax = plt.subplots(figsize=(4, 2), constrained_layout=True)
 
@@ -276,14 +281,16 @@ def get_reward_for_bench_fig(np_weight_episode,
     l2, = ax.plot(np_episode, np_ideal[:, 0], color='g', label=r"$\mathrm{Reward}_{\mathrm{ideal}}$")
     ax.fill_between(np_episode, np_ideal[:, 1], np_ideal[:, 2], color='g', alpha=.2)
 
-    ax.plot([np_episode.min(), np_episode.max()], [-50, -50], "--", c="black", linewidth=1)
-    ax.text(np_episode.max(), -50, "$\\pm 50$ ", ha="right", va="bottom")
+    ax.plot([np_episode.min(), np_episode.max()], [-lim//2, -lim//2], "--", c="black", linewidth=1)
+    ax.text(np_episode.max(), -lim//2, f"$\\pm {lim//2}$ ", ha="right", va="bottom")
 
     ax.set_xlim(np_episode.min(), np_episode.max())
     # ax.set_ylim(np_actual[:, 0].min()*2, 0)
-    ax.set_ylim(-100, 0)
+    ax.set_ylim(-lim, 0)
     ax.set_xlabel(f"Checkpoint episode")
     ax.set_ylabel(f"Reward \n(Mean and 95% \nconfidence interval)")
+
+    set_axis_scientific(ax.xaxis)
 
     np_gap = np.array(list(map(get_mean_confidence_interval, np_ideal_reward - np_actual_reward)))
 
@@ -293,7 +300,7 @@ def get_reward_for_bench_fig(np_weight_episode,
 
     axl.fill_between(np_episode, np_gap[:, 0], color='r', label="Reward gap", alpha=.4)
     # axl.set_ylim(0, np_gap[:, 0].max()*2)
-    axl.set_ylim(0, 100)
+    axl.set_ylim(0, lim)
 
     # ax.legend(handles=[l1, l2, l3], loc='center left', bbox_to_anchor=(1.2, 0.5))
     ax.legend(handles=[l1, l2, l3])
