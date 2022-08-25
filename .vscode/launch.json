@@ -88,5 +88,14 @@
             "console": "integratedTerminal",
             "justMyCode": true
         },
+        {
+            "name": "Python: [test] onnx_export",
+            "type": "python",
+            "request": "launch",
+            "program": "test_onnx_export.py",
+            "args": [],
+            "console": "integratedTerminal",
+            "justMyCode": true
+        },
     ]
 }
